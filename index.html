@@ -1,121 +1,301 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Book, ChevronDown, ChevronUp, Send, Bot, Info, BookOpen } from 'lucide-react';
+import { 
+  Book, 
+  ChevronDown, 
+  ChevronUp, 
+  Send, 
+  Bot, 
+  Info, 
+  BookOpen,
+  Map,
+  MessageCircle
+} from 'lucide-react';
 
+// --- BASE DE DATOS JURÍDICA ---
 const db = {
-  pub: { t: "Derecho Público", c: "bg-blue-50 border-blue-500 text-blue-900", b: [
-    { n: "Constitucional", d: "Estructura fundamental del Estado y DDHH.", e: "Juicio de amparo.", s: "Burgoa, I. (2005)" },
-    { n: "Administrativo", d: "Organización y deberes de la Admin. Pública.", e: "Licencia de construcción.", s: "Fraga, G. (2000)" },
-    { n: "Penal", d: "Delitos y penas para el orden social.", e: "Proceso por robo.", s: "Castellanos, F. (2018)" },
-    { n: "Procesal", d: "Trámites y organización de tribunales.", e: "Plazos judiciales.", s: "Ovalle, J. (2016)" },
-    { n: "Int. Público", d: "Relaciones entre Estados.", e: "Tratados de libre comercio.", s: "Sepúlveda, C. (2004)" }
-  ]},
-  priv: { t: "Derecho Privado", c: "bg-emerald-50 border-emerald-500 text-emerald-900", b: [
-    { n: "Civil", d: "Relaciones personales/patrimoniales.", e: "Contrato de arrendamiento.", s: "Rojina, R. (2008)" },
-    { n: "Mercantil", d: "Actos de comercio y empresarios.", e: "Constitución de S.A.", s: "Mantilla, R. (1996)" },
-    { n: "Int. Privado", d: "Conflictos de leyes intl.", e: "Divorcio multinacional.", s: "Pereznieto, L. (2015)" },
-    { n: "Bancario", d: "Regulación de entidades financieras.", e: "Tasas de interés.", s: "Acosta, M. (1990)" },
-    { n: "Prop. Intelectual", d: "Protección de creaciones mentales.", e: "Registro de marca.", s: "Ley Federal PI" }
-  ]},
-  soc: { t: "Derecho Social", c: "bg-amber-50 border-amber-500 text-amber-900", b: [
-    { n: "Laboral", d: "Relaciones obrero-patronales.", e: "Despido injustificado.", s: "De la Cueva, M. (2003)" },
-    { n: "Agrario", d: "Tenencia de la tierra/ejidos.", e: "Parcelas ejidales.", s: "Mendieta, L. (1980)" },
-    { n: "Seguridad Social", d: "Protección ante riesgos (salud/vejez).", e: "Pensión IMSS.", s: "Ruiz, A. (2010)" },
-    { n: "Económico", d: "Estado en la economía.", e: "Leyes antimonopolio.", s: "Witker, J. (1999)" },
-    { n: "Ambiental", d: "Protección del equilibrio ecológico.", e: "Sanciones por residuos.", s: "Carmona, M. (2014)" }
-  ]}
+  publico: {
+    title: "Derecho Público",
+    style: "bg-blue-50 border-blue-500 text-blue-900",
+    items: [
+      { name: "Constitucional", desc: "Estructura fundamental del Estado y DDHH.", ex: "Juicio de amparo.", source: "Burgoa, I. (2005)" },
+      { name: "Administrativo", desc: "Organización y deberes de la Admin. Pública.", ex: "Licencia de construcción.", source: "Fraga, G. (2000)" },
+      { name: "Penal", desc: "Delitos y penas para el orden social.", ex: "Proceso por robo.", source: "Castellanos, F. (2018)" },
+      { name: "Procesal", desc: "Trámites y organización de tribunales.", ex: "Plazos judiciales.", source: "Ovalle, J. (2016)" },
+      { name: "Int. Público", desc: "Relaciones entre Estados.", ex: "Tratados de libre comercio.", source: "Sepúlveda, C. (2004)" }
+    ]
+  },
+  privado: {
+    title: "Derecho Privado",
+    style: "bg-emerald-50 border-emerald-500 text-emerald-900",
+    items: [
+      { name: "Civil", desc: "Relaciones personales/patrimoniales.", ex: "Contrato de arrendamiento.", source: "Rojina, R. (2008)" },
+      { name: "Mercantil", desc: "Actos de comercio y empresarios.", ex: "Constitución de S.A.", source: "Mantilla, R. (1996)" },
+      { name: "Int. Privado", desc: "Conflictos de leyes internacionales.", ex: "Divorcio multinacional.", source: "Pereznieto, L. (2015)" },
+      { name: "Bancario", desc: "Regulación de entidades financieras.", ex: "Tasas de interés.", source: "Acosta, M. (1990)" },
+      { name: "Prop. Intelectual", desc: "Protección de creaciones mentales.", ex: "Registro de marca.", source: "Ley Federal PI" }
+    ]
+  },
+  social: {
+    title: "Derecho Social",
+    style: "bg-amber-50 border-amber-500 text-amber-900",
+    items: [
+      { name: "Laboral", desc: "Relaciones obrero-patronales.", ex: "Despido injustificado.", source: "De la Cueva, M. (2003)" },
+      { name: "Agrario", desc: "Tenencia de la tierra y ejidos.", ex: "Parcelas ejidales.", source: "Mendieta, L. (1980)" },
+      { name: "Seguridad Social", desc: "Protección ante riesgos (salud/vejez).", ex: "Pensión IMSS.", source: "Ruiz, A. (2010)" },
+      { name: "Económico", desc: "Estado como rector económico.", ex: "Leyes antimonopolio.", source: "Witker, J. (1999)" },
+      { name: "Ambiental", desc: "Equilibrio ecológico.", ex: "Sanciones por residuos.", source: "Carmona, M. (2014)" }
+    ]
+  }
 };
 
-const Card = ({ d, color }) => {
-  const [o, setO] = useState(false);
+// --- COMPONENTES UI ---
+
+const InfoCard = ({ item, colorClass }) => {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className={`mb-3 border-l-4 rounded-r shadow-sm bg-white ${color}`}>
-      <div className="p-3 flex justify-between cursor-pointer" onClick={() => setO(!o)}>
-        <h3 className="font-bold text-sm">{d.n}</h3>{o ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+    <div className={`mb-3 border-l-4 rounded-r-lg shadow-sm bg-white hover:shadow-md transition-all duration-200 ${colorClass}`}>
+      <div 
+        className="p-3 flex justify-between items-center cursor-pointer select-none"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <h3 className="font-bold text-gray-800 text-sm md:text-base">{item.name}</h3>
+        <div className="text-gray-400">
+          {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </div>
       </div>
-      {o && <div className="p-3 pt-0 text-sm bg-white/50"><p><b>C:</b> {d.d}</p><p><b>E:</b> {d.e}</p><p className="text-xs text-gray-500 mt-1">Fuente: {d.s}</p></div>}
+      
+      {isOpen && (
+        <div className="p-3 pt-0 text-sm animate-in fade-in slide-in-from-top-1">
+          <div className="bg-white/60 p-2 rounded mb-2">
+            <span className="font-bold block text-xs text-gray-500 uppercase">Concepto</span>
+            <p className="text-gray-700">{item.desc}</p>
+          </div>
+          <div className="bg-white/60 p-2 rounded mb-2">
+            <span className="font-bold block text-xs text-gray-500 uppercase">Ejemplo</span>
+            <p className="text-gray-700 italic">"{item.ex}"</p>
+          </div>
+          <div className="text-xs text-gray-400 flex items-center gap-1 border-t border-gray-100 pt-2">
+            <BookOpen size={12} /> Fuente: {item.source}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+const MindMapNode = ({ top, left, label, color, items }) => (
+  <div className="absolute transform -translate-x-1/2 w-48 text-center z-10 transition-transform hover:scale-105" style={{ top, left }}>
+    <div className={`${color} text-white font-bold px-4 py-2 rounded-lg shadow-lg mb-3 text-sm tracking-wide border-2 border-white ring-2 ring-gray-100`}>
+      {label}
+    </div>
+    <div className="flex flex-wrap justify-center gap-1.5 bg-white/30 p-2 rounded-lg backdrop-blur-sm">
+      {items.map((i, k) => (
+        <span key={k} className="text-[10px] font-medium bg-white text-gray-700 border border-gray-200 px-2 py-1 rounded shadow-sm">
+          {i.name}
+        </span>
+      ))}
+    </div>
+  </div>
+);
 
 const MindMap = () => (
-  <div className="overflow-auto p-4 bg-slate-50 rounded-xl shadow-inner border border-slate-200">
-    <div className="relative min-w-[600px] h-[400px] mx-auto bg-white/40 rounded">
-      <svg className="absolute w-full h-full pointer-events-none"><line x1="50%" y1="50%" x2="50%" y2="20%" stroke="#3B82F6" strokeWidth="2"/><line x1="50%" y1="50%" x2="20%" y2="70%" stroke="#10B981" strokeWidth="2"/><line x1="50%" y1="50%" x2="80%" y2="70%" stroke="#F59E0B" strokeWidth="2"/></svg>
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 text-white font-bold p-4 rounded-full z-20">DERECHO</div>
-      <Node top="5%" left="50%" label="PÚBLICO" color="bg-blue-600" items={db.pub.b} />
-      <Node top="65%" left="15%" label="PRIVADO" color="bg-emerald-600" items={db.priv.b} />
-      <Node top="65%" left="65%" label="SOCIAL" color="bg-amber-600" items={db.soc.b} />
+  <div className="w-full overflow-auto bg-slate-50 p-6 rounded-xl shadow-inner border border-slate-200 h-[500px] flex items-center justify-center">
+    <div className="relative min-w-[700px] h-[400px]">
+      {/* Conexiones SVG */}
+      <svg className="absolute w-full h-full pointer-events-none drop-shadow-md">
+        <path d="M 350 200 L 350 80" stroke="#2563EB" strokeWidth="3" fill="none" />
+        <path d="M 350 200 L 150 300" stroke="#059669" strokeWidth="3" fill="none" />
+        <path d="M 350 200 L 550 300" stroke="#D97706" strokeWidth="3" fill="none" />
+        <circle cx="350" cy="200" r="5" fill="#1E293B" />
+      </svg>
+      
+      {/* Nodo Central */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+        <div className="bg-slate-800 text-white font-bold w-24 h-24 rounded-full flex items-center justify-center shadow-2xl border-4 border-slate-200 text-center text-sm">
+          EL<br/>DERECHO
+        </div>
+      </div>
+
+      {/* Nodos Ramas */}
+      <MindMapNode top="5%" left="50%" label="PÚBLICO" color="bg-blue-600" items={db.publico.items} />
+      <MindMapNode top="65%" left="20%" label="PRIVADO" color="bg-emerald-600" items={db.privado.items} />
+      <MindMapNode top="65%" left="80%" label="SOCIAL" color="bg-amber-600" items={db.social.items} />
     </div>
   </div>
 );
 
-const Node = ({ top, left, label, color, items }) => (
-  <div className="absolute transform -translate-x-1/2 w-48 text-center z-10" style={{ top, left }}>
-    <div className={`${color} text-white font-bold px-3 py-1 rounded shadow mb-2 text-sm`}>{label}</div>
-    <div className="flex flex-wrap justify-center gap-1">{items.map((i,k)=><span key={k} className="text-[10px] bg-white border px-1 rounded">{i.n}</span>)}</div>
-  </div>
-);
+const ChatBot = () => {
+  const [messages, setMessages] = useState([
+    { role: 'ai', text: "¡Hola! Soy tu Asesor Legal IA. ¿Necesitas aclarar algún concepto jurídico?" }
+  ]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const endRef = useRef(null);
 
-const AI = () => {
-  const [m, setM] = useState([{ r: 'ai', t: "Hola, soy tu asesor legal IA. Pregúntame sobre ramas del derecho." }]);
-  const [v, setV] = useState('');
-  const end = useRef(null);
-  useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [m]);
+  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [messages, isTyping]);
 
-  const send = () => {
-    if (!v.trim()) return;
-    const q = v.toLowerCase(), newM = [...m, { r: 'user', t: v }];
-    setM(newM); setV('');
+  const handleSend = () => {
+    if (!input.trim()) return;
+    const userText = input;
+    setMessages(prev => [...prev, { role: 'user', text: userText }]);
+    setInput('');
+    setIsTyping(true);
+
+    // Simulación de respuesta inteligente
     setTimeout(() => {
-      let resp = "No encontré ese dato específico.";
-      if (q.includes('hola')) resp = "¡Hola! Listo para estudiar.";
-      else if (q.includes('publico')) resp = "El Derecho Público regula al Estado y sus relaciones.";
-      else if (q.includes('privado')) resp = "El Derecho Privado regula relaciones entre particulares.";
-      else if (q.includes('social')) resp = "El Derecho Social protege grupos vulnerables.";
+      const q = userText.toLowerCase();
+      let response = "Interesante pregunta. Para efectos de esta actividad, te sugiero revisar las tarjetas en la sección de 'Temario'.";
+      
+      if (q.includes('hola')) response = "¡Hola! Estoy listo para ayudarte con tu tarea de derecho.";
+      else if (q.includes('publico')) response = "El Derecho Público regula las relaciones de supra-subordinación entre el Estado y los particulares.";
+      else if (q.includes('privado')) response = "El Derecho Privado se encarga de las relaciones entre particulares en un plano de igualdad.";
+      else if (q.includes('social')) response = "El Derecho Social busca proteger a las clases económicamente débiles.";
       else {
-        [...db.pub.b, ...db.priv.b, ...db.soc.b].forEach(b => {
-          if (q.includes(b.n.toLowerCase())) resp = `**${b.n}**: ${b.d} (Ej: ${b.e})`;
+        // Búsqueda simple en la DB
+        let found = false;
+        Object.values(db).forEach(cat => {
+          cat.items.forEach(item => {
+            if (q.includes(item.name.toLowerCase())) {
+              response = `**${item.name}**: ${item.desc} (Ejemplo: ${item.ex})`;
+              found = true;
+            }
+          });
         });
+        if (!found && (q.includes('ejemplo') || q.includes('concepto'))) response = "Por favor especifica qué rama te interesa (ej: 'penal', 'civil').";
       }
-      setM([...newM, { r: 'ai', t: resp }]);
-    }, 600);
+      
+      setMessages(prev => [...prev, { role: 'ai', text: response }]);
+      setIsTyping(false);
+    }, 800);
   };
+
   return (
-    <div className="bg-white rounded border h-[400px] flex flex-col">
-      <div className="bg-slate-800 p-2 text-white flex gap-2 items-center"><Bot size={18}/> <span className="text-sm font-bold">Asesor IA</span></div>
-      <div className="flex-1 overflow-y-auto p-2 space-y-2">{m.map((x,i)=><div key={i} className={`p-2 rounded max-w-[85%] text-xs ${x.r==='user'?'bg-blue-600 text-white ml-auto':'bg-gray-100'}`}>{x.t}</div>)}<div ref={end}/></div>
-      <div className="p-2 border-t flex gap-1"><input value={v} onChange={e=>setV(e.target.value)} onKeyPress={e=>e.key==='Enter'&&send()} className="flex-1 border rounded px-2 text-sm" placeholder="Pregunta..."/><button onClick={send} className="bg-blue-600 text-white p-1 rounded"><Send size={16}/></button></div>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-lg h-[500px] flex flex-col overflow-hidden">
+      <div className="bg-slate-800 p-4 text-white flex items-center gap-3">
+        <div className="p-2 bg-white/10 rounded-full"><Bot size={20}/></div>
+        <div>
+          <h3 className="font-bold text-sm">Asesor Jurídico IA</h3>
+          <p className="text-xs text-slate-300">Responde sobre las 3 ramas</p>
+        </div>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[80%] p-3 rounded-2xl text-sm shadow-sm ${
+              m.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
+            }`}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {isTyping && <div className="text-xs text-gray-400 italic ml-4">Escribiendo...</div>}
+        <div ref={endRef} />
+      </div>
+
+      <div className="p-3 border-t bg-white flex gap-2">
+        <input 
+          className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Escribe tu duda..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+        />
+        <button onClick={handleSend} className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition-colors">
+          <Send size={18} />
+        </button>
+      </div>
     </div>
   );
 };
 
+// --- APP PRINCIPAL ---
 export default function Homepage() {
-  const [tab, setTab] = useState('res');
+  const [activeTab, setActiveTab] = useState('research');
+
+  const tabs = [
+    { id: 'research', label: 'Investigación', icon: Book },
+    { id: 'map', label: 'Mapa Mental', icon: Map },
+    { id: 'ai', label: 'Asesor IA', icon: MessageCircle },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 p-4 max-w-5xl mx-auto">
-      <header className="flex justify-between items-center mb-6 bg-white p-3 rounded shadow-sm">
-        <div className="flex items-center gap-2 text-blue-900 font-bold"><Book size={20}/> Investigación Jurídica</div>
-        <div className="flex gap-2 text-sm">
-          <button onClick={()=>setTab('res')} className={tab==='res'?'text-blue-600 font-bold':''}>Temario</button>
-          <button onClick={()=>setTab('map')} className={tab==='map'?'text-blue-600 font-bold':''}>Mapa</button>
-          <button onClick={()=>setTab('ai')} className={tab==='ai'?'text-purple-600 font-bold':''}>IA</button>
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pb-10">
+      {/* Navbar */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-slate-800">
+            <div className="bg-blue-600 text-white p-1.5 rounded-lg"><Book size={20} /></div>
+            <span className="font-bold text-lg tracking-tight">Estudio Jurídico</span>
+          </div>
+          
+          <nav className="flex bg-gray-100 p-1 rounded-lg gap-1">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                  activeTab === tab.id 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                }`}
+              >
+                <tab.icon size={16} />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
       </header>
-      <main>
-        {tab === 'res' && (
-          <div className="grid md:grid-cols-3 gap-4 animate-in fade-in">
-            {Object.entries(db).map(([k, cat]) => (
-              <div key={k}>
-                <h2 className={`font-bold text-lg mb-2 border-b-2 pb-1 ${cat.c.split(' ')[1]}`}>{cat.t}</h2>
-                {cat.b.map((b,i)=><Card key={i} d={b} color={cat.c}/>)}
+
+      {/* Contenido Principal */}
+      <main className="max-w-5xl mx-auto p-6 animate-in fade-in duration-500">
+        
+        {/* VISTA 1: TEMARIO */}
+        {activeTab === 'research' && (
+          <div className="grid md:grid-cols-3 gap-6">
+            {Object.values(db).map((cat, idx) => (
+              <div key={idx} className="flex flex-col">
+                <div className={`mb-4 pb-2 border-b-2 ${cat.style.split(' ')[1]}`}>
+                  <h2 className="text-xl font-bold">{cat.title}</h2>
+                </div>
+                <div className="space-y-2">
+                  {cat.items.map((item, i) => (
+                    <InfoCard key={i} item={item} colorClass={cat.style} />
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         )}
-        {tab === 'map' && <MindMap />}
-        {tab === 'ai' && <AI />}
+
+        {/* VISTA 2: MAPA */}
+        {activeTab === 'map' && (
+          <div>
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-slate-800">Mapa Jerárquico</h2>
+              <p className="text-gray-500">Representación visual de las ramas del derecho</p>
+            </div>
+            <MindMap />
+          </div>
+        )}
+
+        {/* VISTA 3: CHAT IA */}
+        {activeTab === 'ai' && (
+          <div className="max-w-2xl mx-auto">
+            <ChatBot />
+          </div>
+        )}
+
       </main>
-      <footer className="mt-8 text-center text-xs text-gray-400 border-t pt-4">© 2023 Estudiante de Derecho • Uso Educativo</footer>
+
+      <footer className="max-w-5xl mx-auto px-6 mt-8 border-t border-gray-200 pt-6 text-center">
+        <p className="text-xs text-gray-400 flex items-center justify-center gap-2">
+          <span>© 2024 Actividad Educativa</span>
+          <span>•</span>
+          <span className="flex items-center gap-1"><Info size={12}/> No al plagio</span>
+        </p>
+      </footer>
     </div>
   );
 }
