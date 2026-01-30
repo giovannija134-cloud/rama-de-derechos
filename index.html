@@ -5,63 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asesor Virtual de Derecho</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide-react"></script>
 </head>
-<body>
+<body class="bg-slate-50">
     <div id="root"></div>
+
     <script type="text/babel">
-        const { Book, Network, MessageSquare, Gavel, ExternalLink, ChevronDown, ChevronRight, User, Bot, Send, Search, Info } = lucide-react;
-        const { useState, useEffect, useRef } = React;
+        const { useState } = React;
 
         const App = () => {
-            // DATOS DE TU INVESTIGACIÓN
-            const legalData = {
-                publico: { title: "Derecho Público", color: "bg-blue-100 text-blue-800", borderColor: "border-blue-500", description: "Regula las relaciones entre el Estado y los ciudadanos.", subbranches: [
-                    { name: "Derecho Constitucional", concept: "Establece los principios fundamentales del Estado.", example: "La Constitución Política de México.", source: "Constitución Mexicana" },
-                    { name: "Derecho Administrativo", concept: "Regula la administración pública.", example: "Licencia de construcción.", source: "Ley Federal de Proc. Adm." }
-                ]},
-                privado: { title: "Derecho Privado", color: "bg-purple-100 text-purple-800", borderColor: "border-purple-500", description: "Regula relaciones entre particulares.", subbranches: [
-                    { name: "Derecho Civil", concept: "Regula familia, bienes y contratos.", example: "Un contrato de compraventa.", source: "Código Civil Federal" }
-                ]},
-                social: { title: "Derecho Social", color: "bg-emerald-100 text-emerald-800", borderColor: "border-emerald-500", description: "Protege a grupos vulnerables.", subbranches: [
-                    { name: "Derecho Laboral", concept: "Regula relaciones patrón-trabajador.", example: "Indemnización por despido.", source: "Ley Federal del Trabajo" }
-                ]}
+            const [seccion, setSeccion] = useState(null);
+
+            const ramas = {
+                publico: { t: "Derecho Público", d: "Relación Estado-Ciudadano", c: "bg-blue-600" },
+                privado: { t: "Derecho Privado", d: "Relación entre particulares", c: "bg-purple-600" },
+                social: { t: "Derecho Social", d: "Protección a vulnerables", c: "bg-emerald-600" }
             };
 
-            const [openSection, setOpenSection] = useState('publico');
-
             return (
-                <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-                    <header className="max-w-4xl mx-auto text-center mb-10">
-                        <h1 className="text-4xl font-bold text-slate-800 mb-2">Investigación Académica: Ramas del Derecho</h1>
-                        <p className="text-gray-600">Asesor Virtual Interactivo</p>
-                    </header>
-                    <main className="max-w-4xl mx-auto grid gap-6">
-                        {Object.entries(legalData).map(([key, branch]) => (
-                            <div key={key} className={`border-l-4 ${branch.borderColor} bg-white rounded-r-xl shadow-sm overflow-hidden`}>
-                                <button onClick={() => setOpenSection(openSection === key ? null : key)} className={`w-full flex items-center justify-between p-4 ${branch.color} font-bold text-lg`}>
-                                    <span className="flex items-center gap-2"><Gavel size={20}/> {branch.title}</span>
-                                    {openSection === key ? <ChevronDown /> : <ChevronRight />}
+                <div className="max-w-md mx-auto my-10 p-6 bg-white shadow-xl rounded-2xl border border-gray-100">
+                    <h1 className="text-2xl font-bold text-gray-800 text-center mb-6">Asesor Virtual Jurídico</h1>
+                    <p className="text-sm text-gray-500 mb-6 text-center italic">Investigación de Ramas del Derecho</p>
+                    
+                    <div className="space-y-4">
+                        {Object.entries(ramas).map(([id, info]) => (
+                            <div key={id} className="border rounded-lg overflow-hidden">
+                                <button 
+                                    onClick={() => setSeccion(seccion === id ? null : id)}
+                                    className={`w-full p-4 text-left text-white font-semibold transition-all ${info.c}`}
+                                >
+                                    {info.t}
                                 </button>
-                                {openSection === key && (
-                                    <div className="p-4 space-y-4">
-                                        <p className="text-gray-700 italic border-b pb-2">{branch.description}</p>
-                                        {branch.subbranches.map((sub, idx) => (
-                                            <div key={idx} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                                <h4 className="font-bold text-blue-700">{sub.name}</h4>
-                                                <p className="text-sm"><strong>Concepto:</strong> {sub.concept}</p>
-                                                <p className="text-sm"><strong>Ejemplo:</strong> {sub.example}</p>
-                                                <p className="text-xs text-gray-500 mt-1">Fuente: {sub.source}</p>
-                                            </div>
-                                        ))}
+                                {seccion === id && (
+                                    <div className="p-4 bg-gray-50 text-gray-700 animate-fade-in">
+                                        <p className="font-medium mb-2 underline">{info.d}</p>
+                                        <p className="text-sm">Aquí se detalla la investigación técnica sobre esta rama, sus leyes vigentes y ejemplos prácticos.</p>
                                     </div>
                                 )}
                             </div>
                         ))}
-                    </main>
+                    </div>
+                    
+                    <footer className="mt-8 text-center text-xs text-gray-400">
+                        Proyecto Académico - 2026
+                    </footer>
                 </div>
             );
         };
